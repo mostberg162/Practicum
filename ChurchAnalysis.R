@@ -9,12 +9,14 @@
 #install.packages("forecast")
 #install.packages("zoo")
 #install.packages("lubridate")
+install.packages("nortest")
 library(forecast)
 library(zoo)
 library(imputeTS)
 library(dplyr)
 library(ggplot2)
 library(lubridate)
+library(nortest)
 
 ## Read in the data and take care of formatting and missing data
 Churchdata <- read.csv("/Users/mostberg/Desktop/RegisPracticum/ChurchDataForR.csv")
@@ -46,6 +48,10 @@ Sundays <-
   Churchdata %>%
   filter(Day.of.Week == 1 & Services > 0)
 
+##Check for normality
+ad.test(Sundays$Totalattendance)
+## Looks like Easter/Christmas may be influencing normality
+
 ## Check to see if the single service period impacted attendance
 SundayAnova <- Sundays[,c(5,17)]
 fit <- lm(Totalattendance ~ ., data = SundayAnova)
@@ -57,6 +63,10 @@ boxplot(Totalattendance ~ single.service, data = SundayAnova, main="Did Single S
 SundayNoHolidays <-
   Sundays %>%
   filter(Religious.Holiday == 0)
+
+#Check for normality
+ad.test(SundayNoHolidays$Totalattendance)
+#Taking Easter/Christmas out does fix it.
 
 fit2 <- lm(Totalattendance ~ single.service, data = SundayAnova)
 anova(fit2)
